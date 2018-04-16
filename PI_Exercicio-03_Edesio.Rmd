@@ -1,0 +1,215 @@
+---
+title: "CENTRO UNIVERSITÁRIO METODISTA IZABELA HENDRIX"
+subtite: "Programação Funcional e Orientada a Objetos - PROJETO INTEGRADOR - Exercício 3"
+by: "Edésio Rocha Jr"
+date: "12 de Abril de 2018"
+output: html_notebook
+---
+
+# Introdução
+
+O Exame Nacional de Desempenho de Estudantes (Enade) avalia o rendimento dos concluintes dos cursos de graduação em relação aos conteúdos programáticos, habilidades e competências adquiridas em sua formação. O exame é obrigatório e a situação de regularidade do estudante no Exame deve constar em seu histórico escolar.
+A amostra analizada neste documento refere-se ao ano de 2014.
+
+# Instalando os pacotes e acessando o banco de dados ENADE 2014
+
+```{r}
+
+install.packages("readr")
+install.packages("dplyr")
+install.packages("descr")
+library(readr)
+library(dplyr)
+library(descr)
+
+install.packages("RColorBrewer")
+library(RColorBrewer)
+cores <- brewer.pal(8, "Set2")
+
+enade14 <- read_csv2("https://raw.githubusercontent.com/neylsoncrepalde/introducao_ao_r/master/dados/enade_2014_amostra.csv")
+
+```
+
+
+# Análises preliminares sobre o banco de dados ENADE 2014
+
+1) Mostre com um comando e usando um gráfico a distribuição das idades dessa amostra de alunos que fizeram ENADE em 2014. Comente o resultado.
+
+```{r}
+
+print(summary(enade14$nu_idade))
+print(hist(enade14$nu_idade, col = "light blue",
+     main = "Histograma de Distribuição de Idades | ENADE 2014",
+     xlab = "Idades",
+     ylab = "Frequência"))
+
+```
+
+Comentário:
+O gráfico destaca uma grande concentração de alunos na faixa entre 20 e 25 anos que fizeram o exame. Outro índice expressivo é que 75% dos alunos que fizeram o ENADE possuem até 34 anos.
+
+
+2) Monte uma tabela exibindo as porcentagens e os valores absolutos das proporções de alunos por COR/RAÇA. O descobrimos sobre isso?
+
+```{r}
+
+cor_raça = enade14$qe_i2
+cor_raça <- as.factor(enade14$qe_i2)
+levels(cor_raça) <- c("Branco","Negro","Pardo","Amarelo","Indígena")
+print(freq(na.omit(cor_raça),
+     col = cores,
+     main = "Cor / Raça | ENADE 2014"))
+
+```
+
+Comentário:
+  Este gráfico mostra uma disparidade na proporção de alunos que fizeram o exame em 2014. Mesmo o Brasil sendo um país com sua população negra em 53%, sengundo o Censo Demográfico em 2013, a concentração dos que se declararam Brancos no Exame Nacional é quase 5 vezes maior que os que se declararam Negros. Mesmo ao comparar com os alunos que se declararam Pardos ainda existe uma significativa diferença. Este dado revela que o acesso a educação no Brasil continua desproporcional.
+
+
+3) Apresente a proporção de alunos casados e solteiros. Atenção, queremos apenas CASADOS e SOLTEIROS. Exclua de sua análise os alunos que tiverem outro tipo de estado civil.
+
+```{r}
+
+casados_solteiros = enade14$qe_i1[enade14$qe_i1 == "a"] <- "Solteiro(a)"
+casados_solteiros = enade14$qe_i1[enade14$qe_i1 == "b"] <- "Casado(a)"
+casados_solteiros <- subset(enade14$qe_i1, enade14$qe_i1 == "Solteiro(a)" | enade14$qe_i1 == "Casado(a)")
+print(freq(casados_solteiros, main = "Estado Civil | ENADE 2014",
+           col = cores))
+
+```
+
+
+4) Apresente estatísticas descritivas sobre a nota geral dos alunos no Enade. Apresente também a informação em um gráfico. Qual é o gráfico mais adequado para a visualização desta variável? Por quê? Comente sobre a nota geral. Os alunos parecem ter, no geral, um bom desempenho ou um mal desempenho?
+
+Resp.: O gráfico mais adequado será um boxplot, pois nos dá uma noção gráfica da distribuição e da varição do rendimento dos alunos.
+
+```{r}
+
+print(summary(enade14$nt_ger))
+print(boxplot(enade14$nt_ger, 
+        col = "light blue",
+        main = "Boxplot da Nota Geral | ENADE 2014", 
+        ylab = "Notas"))
+
+```
+
+Comentário:
+  É possível constatar que o rendimento geral dos alunos é muito baixo, dado que a média das notas ficou abaixo de 50%.
+
+
+5) Crie uma variável binária chamada PUBLICA. Nessa variável, você deve marcar 1 se a universidade em que o aluno estudou foi pública e 0 se foi privada. ATENÇÃO: existe uma variável com a categoria administrativa da IES mas ela possui várias subclassificações. É preciso que você crie outra variável com as categorias corretas.
+
+```{r}
+
+enade14$PUBLICA = enade14$co_catad
+
+enade14$PUBLICA[enade14$PUBLICA == 93] = 1
+enade14$PUBLICA[enade14$PUBLICA == 116] = 1
+enade14$PUBLICA[enade14$PUBLICA == 118] = 0
+enade14$PUBLICA[enade14$PUBLICA == 121] = 0
+enade14$PUBLICA[enade14$PUBLICA == 10001] = 1
+enade14$PUBLICA[enade14$PUBLICA == 10002] = 1
+enade14$PUBLICA[enade14$PUBLICA == 10003] = 1
+enade14$PUBLICA[enade14$PUBLICA == 10004] = 0
+enade14$PUBLICA[enade14$PUBLICA == 10005] = 0
+enade14$PUBLICA[enade14$PUBLICA == 10006] = 0
+enade14$PUBLICA[enade14$PUBLICA == 10007] = 0
+enade14$PUBLICA[enade14$PUBLICA == 10008] = 0
+enade14$PUBLICA[enade14$PUBLICA == 10009] = 0
+
+enade14$PUBLICA[enade14$PUBLICA == "0"] <- "Inst. Privada"
+enade14$PUBLICA[enade14$PUBLICA == "1"] <- "Inst. Pública"
+
+print(freq(enade14$PUBLICA, main = "Instituições Públicas x Instituições Privadas | ENADE 2014"))
+  
+```
+
+
+6) Mostre a distribuição da renda para os alunos do ENADE 2014. Mostre também a distribuição de renda apenas para os alunos das escolas públicas e das escolas privadas.
+
+```{r}
+
+# Renda de todos os alunos:
+
+enade14$renda_alunos = enade14$qe_i8
+
+enade14$renda_alunos[enade14$renda_alunos == "a"] <- "Até 1,5"
+enade14$renda_alunos[enade14$renda_alunos == "b"] <- "1,5 a 3"
+enade14$renda_alunos[enade14$renda_alunos == "c"] <- "3 a 4,5"
+enade14$renda_alunos[enade14$renda_alunos == "d"] <- "4,5 a 6"
+enade14$renda_alunos[enade14$renda_alunos == "e"] <- "6 a 10"
+enade14$renda_alunos[enade14$renda_alunos == "f"] <- "10 a 30"
+enade14$renda_alunos[enade14$renda_alunos == "g"] <- "Mais de 30"
+
+print(barplot(table(enade14$renda_alunos),
+        col = cores,
+        main = "Renda dos alunos | ENADE 2014",
+        xlab = "Renda em salários mínimos",
+        ylab = "Frequência",
+        axes = F))
+
+
+# Renda dos alunos de Instituições Públicas:
+
+renda_public = enade14$qe_i17[enade14$qe_i17 == "a"] <- "Pública"
+
+renda_public <- subset(enade14$qe_i17, enade14$qe_i17 == "Pública")
+print(freq(renda_public, main = "Renda dos alunos - Escolas Públicas | ENADE 2014",
+     plot = F))
+
+
+# Renda dos alunos de Instituições Privadas:
+
+renda_priv = enade14$qe_i17[enade14$qe_i17 == "b"] <- "Privada"
+
+renda_priv <- subset(enade14$qe_i17, enade14$qe_i17 == "Privada")
+print(freq(renda_priv, main = "Renda dos alunos - Escolas Privadas | ENADE 2014",
+     plot = F))
+
+```
+
+
+7) Mostre agora a nota geral dos alunos das faculdades públicas e dos alunos das faculdades privadas. O que você acha desses dados?
+
+```{r}
+
+# Média da nota geral dos alunos de faculdades públicas:
+
+nota_publica_geral <- enade14$nt_ger[enade14$PUBLICA == "Inst. Pública"]
+mean(nota_publica_geral, na.rm = T)
+
+
+# Média da nota geral dos alunos de faculdades privadas:
+
+nota_priv_geral <- enade14$nt_ger[enade14$PUBLICA == "Inst. Privada"]
+mean(nota_priv_geral, na.rm = T)
+
+```
+
+Comentário:
+  Pela amostra em 2014, os alunos de instituições públicas desempenharam um rendimento acadêmico superior aos alunos   de instituições privadas.
+
+
+# BONUS
+
+1) Existe um teste estatístico para verificar se a média da nota geral desta amostra dos alunos que fizeram ENADE pode ser inferida para toda a população? Faça o teste e apresente os resultados. Qual é o intervalo de confiança do teste?
+
+```{r}
+
+t.test(enade14$nt_ger)
+
+```
+
+
+
+
+2) Existe um teste estatístico para verificar se a diferença entre as notas dos alunos das universidades públicas e dos alunos das universidades privadas é estatisticamente significante? Faça o teste e apresente os resultados.
+
+```{r}
+
+t.test(nota_publica_geral, nota_priv_geral)
+
+```
+
+
+#==============================================================FIM
